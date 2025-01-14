@@ -14,13 +14,15 @@ class Store(val city: String, private val phonePrices: Map<String, Int>, private
     // Метод для покупки телефона
     fun purchasePhone(phoneName: String): Boolean {
         if (phonePrices.containsKey(phoneName)) {
-            println("Вы купили: $phoneName в городе $city за ${phonePrices[phoneName]} USD")
-            salesCounter.recordSale(phoneName)  // Регистрация продажи
+            val price = phonePrices[phoneName] ?: return false
+            println("Вы купили: $phoneName в городе $city за $price USD")
+            salesCounter.recordSale(phoneName, price) // Передача цены при регистрации продажи
             return true
-        } else {
+        }
+        else {
             println("Такого телефона нет в продаже в городе $city")
             return false
-        }
+            }
     }
 }
 
@@ -60,7 +62,8 @@ fun main() {
         println("1. Москва")
         println("2. Санкт-Петербург")
         println("3. Показать общий счет продаж")
-        println("4. Выход")
+        println("4. Показать общую сумму покупок")
+        println("5. Выход")
 
         val cityChoice = readLine()?.toIntOrNull()
 
@@ -68,14 +71,15 @@ fun main() {
             1 -> selectAndPurchasePhone(moscowStore)  // Выбор и покупка телефона в Москве
             2 -> selectAndPurchasePhone(spbStore)  // Выбор и покупка телефона в Санкт-Петербурге
             3 -> showTotalSales(salesCounter)  // Показ общего счета продаж
-            4 -> continueShopping = false  // Выход из программы
+            4 -> showTotalAmount(salesCounter)
+            5 -> continueShopping = false  // Выход из программы
             else -> println("Неверный ввод")
         }
     }
     println("Программа завершена.")
 }
 
-
+// Фнукция для выбора и покупки телефона
 fun selectAndPurchasePhone(store: Store) {
     println("\nДоступные телефоны в городе ${store.city}:")
     val phones = store.getAvailablePhones()
@@ -107,3 +111,8 @@ fun showTotalSales(salesCounter: SalesCounter) {
         println("$phone: $count")
     }
 }
+// Функция для показа общей суммы покупок
+fun showTotalAmount(salesCounter: SalesCounter) {
+    println("\nОбщая сумма покупок: ${salesCounter.getTotalAmount()} USD")
+}
+
