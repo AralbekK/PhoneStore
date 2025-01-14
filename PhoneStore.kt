@@ -4,7 +4,7 @@ package MODULE_12.MobilePhoneStore
 data class Phone(val name: String, val price: Int)
 
 // Класс, представляющий магазин
-class Store(val city: String, private val phonePrices: Map<String, Int>, private val salesCounter: SalesCounter) {
+class Store(val city: String, private val phonePrices: Map<String, Int>, private val salesCounter: SalesCounter, private val repairShop: RepairShop? = null) {
 
     // Метод для получения списка доступных телефонов
     fun getAvailablePhones(): List<Phone> {
@@ -16,16 +16,22 @@ class Store(val city: String, private val phonePrices: Map<String, Int>, private
         if (phonePrices.containsKey(phoneName)) {
             val price = phonePrices[phoneName] ?: return false
             println("Вы купили: $phoneName в городе $city за $price USD")
-            salesCounter.recordSale(phoneName, price) // Передача цены при регистрации продажи
+            salesCounter.recordSale(phoneName, price)  // Передача цены при регистрации продажи
             return true
-        }
-        else {
+        } else {
             println("Такого телефона нет в продаже в городе $city")
             return false
-            }
+        }
+    }
+
+    // Метод для ремонта телефона
+    fun repairPhone(phoneName: String): Boolean {
+        return repairShop?.repairPhone(phoneName) ?: run {
+            println("Ремонтная мастерская недоступна в городе $city")
+            false
+        }
     }
 }
-
 
 // Фнукция для получения списка самых популярных телефонов 2024 года
 fun getTopPhones(): List<Phone> {
@@ -51,9 +57,10 @@ fun main() {
     val spbPrices = phones.associate { it.name to (it.price * 1.05).toInt() }
 
     val salesCounter = SalesCounter()
+    val repairShop = RepairShop()
 
-    // Создание магазинов с разными ценами
-    val moscowStore = Store("Москва", moscowPrices, salesCounter)
+    // Создание магазинов с разными ценами и ремонтной мастерской для Москвы
+    val moscowStore = Store("Москва", moscowPrices, salesCounter, repairShop)
     val spbStore = Store("Санкт-Петербург", spbPrices, salesCounter)
 
     var continueShopping = true
@@ -63,7 +70,8 @@ fun main() {
         println("2. Санкт-Петербург")
         println("3. Показать общий счет продаж")
         println("4. Показать общую сумму покупок")
-        println("5. Выход")
+        println("5. Отремонтировать телефон в Москве")
+        println("6. Выход")
 
         val cityChoice = readLine()?.toIntOrNull()
 
@@ -71,13 +79,15 @@ fun main() {
             1 -> selectAndPurchasePhone(moscowStore)  // Выбор и покупка телефона в Москве
             2 -> selectAndPurchasePhone(spbStore)  // Выбор и покупка телефона в Санкт-Петербурге
             3 -> showTotalSales(salesCounter)  // Показ общего счета продаж
-            4 -> showTotalAmount(salesCounter)
-            5 -> continueShopping = false  // Выход из программы
+            4 -> showTotalAmount(salesCounter)  // Показ общей суммы покупок
+            5 -> repairPhoneInMoscow(moscowStore)  // Ремонт телефона в Москве
+            6 -> continueShopping = false  // Выход из программы
             else -> println("Неверный ввод")
         }
     }
     println("Программа завершена.")
 }
+
 
 // Фнукция для выбора и покупки телефона
 fun selectAndPurchasePhone(store: Store) {
@@ -116,3 +126,17 @@ fun showTotalAmount(salesCounter: SalesCounter) {
     println("\nОбщая сумма покупок: ${salesCounter.getTotalAmount()} USD")
 }
 
+// Функция для ремонта телефона в Москве
+fun repairPhoneInMoscow(store: Store) {
+    println("Введите название вашего сломанного телефона: ")
+    val phoneName = readLine() ?: return
+
+    println("Нужен ли ремонт вашему телефону? (да/нет)")
+    val needRepair = readLine()
+
+    if (needRepair.equals("да", ignoreCase = true)) {
+        store.repairPhone(phoneName)
+    } else {
+        println("Телефон не нуждается в ремонте.")
+    }
+}
