@@ -4,16 +4,18 @@ package MODULE_12.MobilePhoneStore
 data class Phone(val name: String, val price: Int)
 
 // Класс, представляющий магазин
-class Store(val city: String, private val phonePrices: Map<String, Int>) {
+class Store(val city: String, private val phonePrices: Map<String, Int>, private val salesCounter: SalesCounter) {
 
+    // Метод для получения списка доступных телефонов
     fun getAvailablePhones(): List<Phone> {
         return phonePrices.map { (name, price) -> Phone(name, price) }
     }
 
-
+    // Метод для покупки телефона
     fun purchasePhone(phoneName: String): Boolean {
         if (phonePrices.containsKey(phoneName)) {
             println("Вы купили: $phoneName в городе $city за ${phonePrices[phoneName]} USD")
+            salesCounter.recordSale(phoneName)  // Регистрация продажи
             return true
         } else {
             println("Такого телефона нет в продаже в городе $city")
@@ -21,6 +23,7 @@ class Store(val city: String, private val phonePrices: Map<String, Int>) {
         }
     }
 }
+
 
 // Фнукция для получения списка самых популярных телефонов 2024 года
 fun getTopPhones(): List<Phone> {
@@ -33,7 +36,7 @@ fun getTopPhones(): List<Phone> {
         Phone("Oppo Find X7 Pro", 1200),
         Phone("Vivo X100 Pro", 1050),
         Phone("Honor Magic6 Pro", 950),
-        Phone("Nothing Phone (2)", 700),
+        Phone("Nothing Phone 2", 700),
         Phone("Nokia 3310", 70),
     )
 }
@@ -45,28 +48,33 @@ fun main() {
     val moscowPrices = phones.associate { it.name to (it.price * 1.1).toInt() }
     val spbPrices = phones.associate { it.name to (it.price * 1.05).toInt() }
 
+    val salesCounter = SalesCounter()
 
-    val moscowStore = Store("Москва", moscowPrices)
-    val spbStore = Store("Санкт-Петербург", spbPrices)
+    // Создание магазинов с разными ценами
+    val moscowStore = Store("Москва", moscowPrices, salesCounter)
+    val spbStore = Store("Санкт-Петербург", spbPrices, salesCounter)
 
     var continueShopping = true
     while (continueShopping) {
         println("\nВыберите город для покупки:")
         println("1. Москва")
         println("2. Санкт-Петербург")
-        println("3. Выход")
+        println("3. Показать общий счет продаж")
+        println("4. Выход")
 
         val cityChoice = readLine()?.toIntOrNull()
 
         when (cityChoice) {
-            1 -> selectAndPurchasePhone(moscowStore)
-            2 -> selectAndPurchasePhone(spbStore)
-            3 -> continueShopping = false
+            1 -> selectAndPurchasePhone(moscowStore)  // Выбор и покупка телефона в Москве
+            2 -> selectAndPurchasePhone(spbStore)  // Выбор и покупка телефона в Санкт-Петербурге
+            3 -> showTotalSales(salesCounter)  // Показ общего счета продаж
+            4 -> continueShopping = false  // Выход из программы
             else -> println("Неверный ввод")
         }
     }
     println("Программа завершена.")
 }
+
 
 fun selectAndPurchasePhone(store: Store) {
     println("\nДоступные телефоны в городе ${store.city}:")
@@ -89,5 +97,13 @@ fun selectAndPurchasePhone(store: Store) {
 
         }
         else -> println("Неверный ввод.")
+    }
+}
+
+// Функция для показа общего счета продаж
+fun showTotalSales(salesCounter: SalesCounter) {
+    println("\nОбщий счет продаж телефонов:")
+    salesCounter.getTotalSales().forEach { (phone, count) ->
+        println("$phone: $count")
     }
 }
